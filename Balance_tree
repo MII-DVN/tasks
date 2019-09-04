@@ -1,0 +1,54 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <unordered_set>
+#include <map>
+#include <queue>
+#include <set>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+
+void tree_height(int v, vector<pair<int, int>> & g, vector<int> & dp){
+    if (v){
+        int u1 = g[v].first, u2 = g[v].second;
+        tree_height(u1, g, dp);
+        tree_height(u2, g, dp);
+        dp[v] = max(dp[u1], dp[u2]) + 1;
+    }
+}
+
+int k = 0;
+
+void tree_balance(int v, int h, vector<pair<int, int>> & g, vector<int> & dp){
+    if (v){
+        if (h <= 0) k++;
+        int u1 = g[v].first, u2 = g[v].second;
+        int minn = min(min(dp[u1], dp[u2]) + 1, h - 1);
+        tree_balance(u1, minn, g, dp);
+        tree_balance(u2, minn, g, dp);
+    }
+}
+
+int main() {
+    int n;
+    cin >> n;
+    vector<pair<int, int>> g(n + 1);
+    vector<int> dp(n + 1);
+    vector<bool> used(n + 1);
+    for (int i = 1; i <= n; i++){
+        int ch1, ch2;
+        cin >> ch1 >> ch2;
+        g[i] = {ch1, ch2};
+        used[ch1] = true;
+        used[ch2] = true;
+    }
+    for (int i = 1; i <= n; i++){
+        if (!used[i]){
+            tree_height(i, g, dp);
+            tree_balance(i, dp[i], g, dp);
+            cout << k;
+        }
+    }
+    return 0;
+}
