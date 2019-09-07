@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <unordered_set>
+#include <map>
+#include <queue>
+#include <set>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+
+const int INF = 1e6;
+string mask = "22233344115566070778889990";
+vector<pair<int, int>> section;
+map<string, string> dict;
+
+
+string translate(string & s){
+    string number = "";
+    for (int i = 0; i < s.size(); i++){
+        number += mask[s[i] - 'a'];
+    }
+    return number;
+}
+
+void find_equal(string s, string & word){
+    s = word + "#" + s;
+    int x = 0, y = 0, n = s.size(), n_word = word.size();
+    vector<int> z(n);
+    for (int k = n_word + 1; k < n; k++){
+        if (y < k){
+            int j = 0;
+            while (s[j] == s[k + j]) j++;
+            z[k] = j;
+            y = k + j - 1;
+            x = k;
+        } else if (k + z[k - x] <= y){
+            z[k] = z[k - x];
+        } else {
+            int j = y - k + 1;
+            while (s[j] == s[k + j]) j++;
+            z[k] = j;
+            y = k + j - 1;
+            x = k;
+        }
+        if (z[k] == word.size()){
+            section.push_back({k - n_word, k + z[k] - 1 - n_word});
+        }
+    }
+}
+
+void make_section(string & s){
+    int n;
+    cin >> n;
+    for (int i = 1; i <= n; i++){
+        string word;
+        cin >> word;
+        string number = translate(word);
+        dict[number] = word;
+        find_equal(s, number);
+    }
+}
+
+void dinamic_pr(string & s){
+    int n = s.size();
+    vector<int> dp(n + 1, INF);
+    vector<int> prev(n + 1);
+    dp[0] = 0;
+    for (auto [st, fin] : section){
+        if (dp[st - 1] < INF && dp[fin] > dp[st - 1] + 1){
+            prev[fin] = st;
+            dp[fin] = dp[st - 1] + 1;
+        }
+    }
+    if (dp[n] < INF){
+        vector<string> ans;
+        int st = prev[n] - 1, fin = n - 1;
+        while (fin != 0){
+            string number = "";
+            for (int i = st; i <= fin; i++){
+                number += s[i];
+            }
+            ans.push_back(dict[number]);
+            fin = max(st - 1, 0);
+            st = prev[fin + 1] - 1;
+        }
+        for (int i = ans.size() - 1; i >= 0; i--) {
+            cout << ans[i] << " ";
+        }
+        cout << "\n";
+    } else {
+        cout << "No solution.\n";
+    }
+}
+
+int main() {
+
+    string s;
+    cin >> s;
+    while (s != "-1"){
+        section.clear();
+        dict.clear();
+        make_section(s);
+        sort(section.begin(), section.end());
+        dinamic_pr(s);
+        cin >> s;
+    }
+    return 0;
+}
