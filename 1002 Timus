@@ -27,7 +27,7 @@ void find_equal(string s, string & word){
     s = word + "#" + s;
     int x = 0, y = 0, n = s.size(), n_word = word.size();
     vector<int> z(n);
-    for (int k = n_word + 1; k < n; k++){
+    for (int k = 1; k < n; k++){
         if (y < k){
             int j = 0;
             while (s[j] == s[k + j]) j++;
@@ -43,7 +43,7 @@ void find_equal(string s, string & word){
             y = k + j - 1;
             x = k;
         }
-        if (z[k] == word.size()){
+        if (z[k] == word.size() && k > n_word){
             section.push_back({k - n_word, k + z[k] - 1 - n_word});
         }
     }
