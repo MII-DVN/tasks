@@ -1,0 +1,101 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct node{
+    int left, right;
+    long long add, sum;
+    node * left_child, * right_child;
+};
+
+node * build(int left, int right){
+    if (left > right) return 0;
+    node * res = new node;
+    res -> left = left;
+    res -> right = right;
+    res->add = 0;
+    if (left == right){
+        res -> sum = 0;
+        res -> left_child = 0;
+        res -> right_child = 0;
+    } else {
+        int mid = (left + right) / 2;
+        res -> left_child = build(left, mid);
+        res -> right_child = build(mid + 1, right);
+        res->sum = res->left_child->sum + res->right_child->sum;
+    }
+    return res;
+
+}
+
+long long query(node * curr, int left, int right){
+    if (left > curr->right || right < curr->left) return 0;
+    if (left <= curr->left && curr->right <= right)
+        return curr->sum + curr->add;
+    long long left_sum = query(curr->left_child, left, right);
+    long long right_sum = query(curr->right_child, left, right);
+    return left_sum + right_sum + curr->add;
+
+}
+
+void update(node * curr, int left, int right, int delta){
+    if (!curr) return;
+    if (left > curr->right || right < curr->left) return ;
+    if (curr->left == curr->right){
+        curr->sum += delta;
+        return;
+    }
+    if (left <= curr->left && curr->right <= right){
+        curr->add += delta;
+        return;
+    }
+    update(curr->left_child, left, right, delta);
+    update(curr->right_child, left, right, delta);
+    curr->sum = curr->left_child->sum + curr->left_child->add +
+                curr->right_child->sum + curr->right_child->add;
+}
+
+int main(){
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n;
+    cin >> n;
+
+    vector<vector<int>> divider(300000 + 1);
+    for (int i = 2; i <= 300000; i++){
+        for (int j = i; j <= 300000; j += i){
+            divider[j].push_back(i);
+        }
+    }
+
+    vector<int> a(n);
+    for (int i = 0; i < n; i++){
+        cin >> a[i];
+    }
+    auto root = build(0, n - 1);
+
+    int q;
+    cin >> q;
+    for (int i = 1; i <= q; i++){
+        int ind;
+        cin >> ind;
+        if (ind == 2){
+            int l, r, d;
+            cin >> l >> r >> d;
+            update(root, l - 1, r - 1, d);
+        } else {
+            int x;
+            long long summ;
+            cin >> x;
+            summ = a[x - 1];
+            summ += query(root, 0, 0);
+            for (auto u : divider[x]){
+                summ += query(root, u - 1, u - 1);
+            }
+            cout << summ << "\n";
+        }
+    }
+
+}
