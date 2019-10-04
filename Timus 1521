@@ -1,0 +1,106 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <set>
+using namespace std;
+
+
+struct node{
+    int x, y, size;
+    node * left, * right;
+    node(int val){
+        size = 1;
+        x = val;
+        y = rand();
+        left = 0;
+        right = 0;
+    }
+    ~node(){
+        if (left) delete left;
+        if (right) delete right;
+    }
+};
+
+int get_size(node * root){
+    if (!root) return 0;
+    else return root->size;
+}
+
+void update(node * root){
+    if (!root) return;
+    root->size = get_size(root->left) + get_size(root->right) + 1;
+}
+
+int get_kth(node * root, int k){
+
+    int left_size = get_size(root->left);
+    if (k < left_size){
+        return get_kth(root->left, k);
+    } else if (k == left_size)
+        return root->x;
+    else
+        return get_kth(root->right, k - left_size - 1);
+}
+
+pair<node *, node*> split_kth(node * root, int k){
+    if (!root)
+        return {0, 0};
+    if (get_size(root) <= k)
+        return {root, 0};
+    if (k == 0)
+        return {0, root};
+    int left_size = get_size(root->left);
+    if (left_size >= k){
+        auto [res1, res2] = split_kth(root->left, k);
+        root->left = res2;
+        update(root);
+        return {res1, root};
+    } else {
+        auto [res1, res2] = split_kth(root->right, k - 1 - left_size);
+        root->right = res1;
+        update(root);
+        return {root, res2};
+    }
+}
+
+node * merge(node * root1, node * root2){
+    if (!root1) return root2;
+    if (!root2) return root1;
+    if (root1->y < root2->y){
+        root1->right = merge(root1->right, root2);
+        update(root1);
+        return root1;
+    } else {
+        root2->left = merge(root1, root2->left);
+        update(root2);
+        return root2;
+    }
+}
+
+node * insert(node * root, int val){
+    node * newnode = new node(val);
+    return merge(root, newnode);
+}
+
+node * erase(node * root, int val){
+    auto [tmp, res2] = split_kth(root, val);
+    auto [res1, valnode] = split_kth(tmp, val - 1);
+    delete valnode;
+    return merge(res1, res2);
+}
+
+int main(){
+    int n, k;
+    cin >> n >> k;
+    node * root = 0;
+    for (int i = 1; i <= n; i++){
+        root = insert(root, i - 1);
+    }
+    int pr = 0;
+    for (int i = 1; i <= n; i++){
+        pr = (pr + k - 1) % (n - i + 1);
+        cout << get_kth(root, pr) + 1 << " ";
+        root = erase(root, pr + 1);
+    }
+    return 0;
+}
